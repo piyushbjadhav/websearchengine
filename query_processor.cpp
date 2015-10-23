@@ -46,7 +46,7 @@ bool term_sorter(term const&lhs , term const& rhs){
 
 bool result_sorter(result const&lhs , result const& rhs){
 
-	return lhs.bm25 < rhs.bm25;
+	return lhs.bm25 > rhs.bm25;
 }
 
 double getbm25(long int ft,int fdt,int dlen){
@@ -179,7 +179,7 @@ int main(){
     int numberofqueryterms = 0;
     std::string q;
     while(queryss >> q){
-    	std::cout << q<<std::endl;
+    	//std::cout << q<<std::endl;
     	t[numberofqueryterms++] = lexicon[q];
     }
 
@@ -207,7 +207,7 @@ int main(){
 
     	if(tempdoc.docid == d.docid){
     		//doc contains all words
-    		std::cout << d.docid << std::endl;
+    		//std::cout << d.docid << std::endl;
     		double bm25 = 0.0;
     		for(int l =0 ; l<numberofqueryterms ;l++ ){
 
@@ -226,10 +226,14 @@ int main(){
 
     std::sort(results.begin(),results.end(),result_sorter);
 
-    for(result r: results)
-    	std::cout<<r.url<<std::endl;
+    for (unsigned i = 0; i<results.size();i++ ){
+    	std::cout<<results[i].url<<std::endl;
+    	if(i==9)
+    		break;
+    }
 
-    std::cout<<results.size()<<std::endl;
+    // for(result r: results)
+    // 	std::cout<<r.url<<std::endl;
 
 	// readposting *post = new readposting(17721000,208);
 	// std::cout << post->wordid <<std::endl;
