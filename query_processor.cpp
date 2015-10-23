@@ -4,11 +4,17 @@
 #include <string>
 #include <sstream>
 #include <ctime>
+#include <vector>
+#include <cmath>
+
+#define TOTAL_DOCUMENTS 51045
+#define AVG_LENGTH 694
+#define K1 1.2
+#define B 0.75
 
 struct doc{
 	long int docid;
 	int frequency;
-	double bm25;
 };
 
 struct term{
@@ -18,8 +24,35 @@ struct term{
 	long int offset;
 };
 
+struct url{
+	std::string url;
+	int wordcount;
+};
+
+struct result{
+	std::string url;
+	double bm25;
+};
+
 typedef struct term term;
 typedef struct doc doc;
+typedef struct url url;
+typedef struct result result;
+
+bool term_sorter(term const&lhs , term const& rhs){
+
+	return lhs.docfrequency < rhs.docfrequency;
+}
+
+bool result_sorter(result const&lhs , result const& rhs){
+
+	return lhs.bm25 < rhs.bm25;
+}
+
+double getbm25(long int ft,int fdt,int dlen){
+	double konstant = K1 * ((1 - B) + B * (double)dlen/AVG_LENGTH);
+	return log(( (TOTAL_DOCUMENTS - ft + 0.5)/(ft+0.5) ) * (K1+1)*fdt/(konstant+fdt));
+}
 
 class readposting{
 
@@ -104,12 +137,36 @@ int main(){
         lexss >> temp.wordid;
         lexss >> temp.offset;
         lexss >> temp.docfrequency;
+        //avg+=(double)docfrequency/TOTAL_DOCUMENTS
         lexss >> temp.length;
         lexicon[key] = temp;
     }
 
+    //clock_t end = clock();
+    std::cout << "Done." << std::endl;
+    std::cout << "Loading URL Table ..." << std::endl;
+    std::vector<url> urltable;
+    std::ifstream urlfile("urltable.txt"); 
+    std::string urlline;
+    long long int avg = 0;
+    long int doccount =0;
+    url garbage;
+    urltable.push_back(garbage);
+    while( std::getline( urlfile, urlline ) ){
+        std::stringstream urlss(urlline);
+        url tempurl;
+        urlss >> tempurl.url;
+        urlss >> tempurl.wordcount;
+        avg+=tempurl.wordcount;
+        urltable.push_back(tempurl);
+        doccount++;
+    }
+
     clock_t end = clock();
     std::cout << "Done." << std::endl;
+  
+
+
     std::cout << std::endl << "Time :: " <<(end-begin)/CLOCKS_PER_SEC << " Seconds"<<std::endl;
 
     std::string query;
@@ -126,8 +183,53 @@ int main(){
     	t[numberofqueryterms++] = lexicon[q];
     }
 
-    std::cout << t[0].wordid << std::endl;
-    std::cout << t[1].wordid << std::endl;
+    std::sort(t,t + numberofqueryterms,term_sorter);
+
+    readposting* post[10]; 
+
+    for(int k=0;k<numberofqueryterms;k++)
+    	post[k] = new readposting(t[k].offset,t[k].length);
+    
+    doc d,tempdoc;
+    doc doclist[10];
+    tempdoc.docid = 0;
+    std::vector<result> results;
+    while(d.docid <= TOTAL_DOCUMENTS){
+
+    	d = post[0]->nextdoc(tempdoc.docid);
+    	doclist[0] = d;
+    	for (int i = 1; i < numberofqueryterms ;i++){
+    		tempdoc = post[i]->nextdoc(d.docid);
+    		doclist[i] = tempdoc;
+    		if(tempdoc.docid != d.docid)
+    			break;
+    	}
+
+    	if(tempdoc.docid == d.docid){
+    		//doc contains all words
+    		std::cout << d.docid << std::endl;
+    		double bm25 = 0.0;
+    		for(int l =0 ; l<numberofqueryterms ;l++ ){
+
+    			bm25+= getbm25(t[l].docfrequency,doclist[l].frequency,urltable[d.docid].wordcount);
+    		}
+
+    		result r;
+    		r.url = urltable[d.docid].url;
+    		r.bm25 = bm25;
+    		results.push_back(r);
+    	}
+
+
+
+    }
+
+    std::sort(results.begin(),results.end(),result_sorter);
+
+    for(result r: results)
+    	std::cout<<r.url<<std::endl;
+
+    std::cout<<results.size()<<std::endl;
 
 	// readposting *post = new readposting(17721000,208);
 	// std::cout << post->wordid <<std::endl;
