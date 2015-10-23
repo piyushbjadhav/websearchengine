@@ -2,3 +2,5 @@
 temp/
 *.wet
 *.out
+*.hex
+*.bin

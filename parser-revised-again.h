@@ -43,10 +43,11 @@ int getlength(long int digit){
 
 
 
-int parser(char* url, char* doc, int maxlen,long int docid ,std::unordered_map<std::string,long int> &lex,std::vector<posting> &postings,long int &pcount)
+unsigned long int parser(char* url, char* doc, int maxlen,long int docid ,std::unordered_map<std::string,long int> &lex,std::vector<posting> &postings,long int &pcount)
 {
 	char *p, *purl, *word;
 	char ch;
+	unsigned int wordcount = 0;
 	long int wordid;
 	char fileloc[30];
 	static int file_number = 1;
@@ -55,55 +56,55 @@ int parser(char* url, char* doc, int maxlen,long int docid ,std::unordered_map<s
 	if (p == NULL)
 		return 0;
 /* parsing URL */
-	purl = url;
-	while (*purl != '\0')
-	{
-		if (!xl_isindexable(*purl))
-		{
-			purl++;
-			continue;
-		}
+	// purl = url;
+	// while (*purl != '\0')
+	// {
+	// 	if (!xl_isindexable(*purl))
+	// 	{
+	// 		purl++;
+	// 		continue;
+	// 	}
 
-		word = purl;
-		while (xl_isindexable(*purl))
-		{
-			if (xl_isupper(*purl))
-				xl_tolower(*purl);
-			purl++;
-		}
+	// 	word = purl;
+	// 	while (xl_isindexable(*purl))
+	// 	{
+	// 		if (xl_isupper(*purl))
+	// 			xl_tolower(*purl);
+	// 		purl++;
+	// 	}
 
-		ch = *purl;
-		*purl = '\0';
+	// 	ch = *purl;
+	// 	*purl = '\0';
 
 
 		
-		// Assigns WordID
-		if(lex[word] == 0){
-			wordid = lex.size();
-			lex[word] = lex.size();
+	// 	// Assigns WordID
+	// 	if(lex[word] == 0){
+	// 		wordid = lex.size();
+	// 		lex[word] = lex.size();
 
-		}else{
+	// 	}else{
 
-			wordid = lex[word];
-		}
+	// 		wordid = lex[word];
+	// 	}
 
-		//if Vector full , sort and dump to file
-		if(pcount == 10240000){
-			pcount = 0;
-			std::sort(postings.begin(),postings.begin() + 10240000,&posting_sorter);
-			sprintf(fileloc,"temp/index%d",file_number++);
-			outputfile.open(fileloc);
+	// 	//if Vector full , sort and dump to file
+	// 	if(pcount == 10240000){
+	// 		pcount = 0;
+	// 		std::sort(postings.begin(),postings.begin() + 10240000,&posting_sorter);
+	// 		sprintf(fileloc,"temp/index%d",file_number++);
+	// 		outputfile.open(fileloc);
 
-			for(long int i = 0 ; i< 10240000;i++)
-				outputfile << postings[i].wordid << " "<<postings[i].docid <<"\n";
-			outputfile.close();
-		}
-		postings[pcount].wordid = wordid;
-		postings[pcount].docid = docid;
-		pcount++;
+	// 		for(long int i = 0 ; i< 10240000;i++)
+	// 			outputfile << postings[i].wordid << " "<<postings[i].docid <<"\n";
+	// 		outputfile.close();
+	// 	}
+	// 	postings[pcount].wordid = wordid;
+	// 	postings[pcount].docid = docid;
+	// 	pcount++;
 
-		*purl = ch;
-	}
+	// 	*purl = ch;
+	// }
 
 /* parsing page */
 
@@ -160,7 +161,8 @@ int parser(char* url, char* doc, int maxlen,long int docid ,std::unordered_map<s
 			postings[pcount].wordid = wordid;
 			postings[pcount].docid = docid;
 			pcount++;
+			wordcount++;
 	}
 
-	return 0;
+	return wordcount;
 }
