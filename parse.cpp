@@ -7,6 +7,7 @@
 #include <ctime>
 #include <unordered_map>
 #include <vector>
+#include <iterator>
 #include "parser-revised-again.h"
 
 using namespace std;
